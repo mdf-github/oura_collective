@@ -32,7 +32,21 @@ def parse_args(args):
         '--datadir',
         default='./data',
         type=str,
-        help='folder containing the activity_data.csv and sleep_data.csv files',
+        help='folder containing the activity and sleep CSV files',
+    )
+
+    parser.add_argument(
+        '--activity',
+        default='activity_data.csv',
+        type=str,
+        help='CSV file name for the activity data',
+    )
+
+    parser.add_argument(
+        '--sleep',
+        default='sleep_data.csv',
+        type=str,
+        help='CSV file name for the sleep data',
     )
 
     parser.add_argument(
@@ -1190,6 +1204,7 @@ def generate_activityaggdata_subset(activity_data, sleep_data, demog_subset_quer
         )
     
     return activity_agg_data_subset
+
 def make_sleep_reg_data(sleep_data_by_user):
     cat_cols = ['record_id', 'summary_date', 'dayofweek', 'day_name', 'weeknum', 'gender_fmnb', 'dysfunc_depr_anx',
            ]
@@ -1535,8 +1550,8 @@ def main(args=None):
     assert datadir.exists()
     outputdir.mkdir(parents=True, exist_ok=True)
 
-    activity_data = pd.read_csv(datadir / 'activity_data.csv')
-    sleep_data = pd.read_csv(datadir / 'sleep_data.csv')
+    activity_data = pd.read_csv(datadir / f'{args.activity}')
+    sleep_data = pd.read_csv(datadir / f'{args.sleep}')
 
     activity_data['summary_date'] = pd.to_datetime(activity_data['summary_date'])
     sleep_data['summary_date'] = pd.to_datetime(sleep_data['summary_date'])
