@@ -37,14 +37,14 @@ def parse_args(args):
 
     parser.add_argument(
         '--activity',
-        default='activity_data.csv',
+        default=None,
         type=str,
         help='CSV file name for the activity data',
     )
 
     parser.add_argument(
         '--sleep',
-        default='sleep_data.csv',
+        default=None,
         type=str,
         help='CSV file name for the sleep data',
     )
@@ -1567,12 +1567,15 @@ def main(args=None):
     )
 
     # Ring wear across a day
-    plot_user_pctwear_in_days_with_data(activity_data.query('weeknum != 5'),
-                                        outputfile=outputdir / 'pctwear_excltgv_denom_max.png',
-                                        userpctwear_kwargs=dict(mode='max', maxdays=5*7),
-                                        userpctwear_weekend_kwargs=dict(mode='max', maxdays=2*7),
-                                        add_min_days_to_lbl=False
-                                    )
+    if 'class_5min_binary' in activity_data.columns:
+        plot_user_pctwear_in_days_with_data(activity_data.query('weeknum != 5'),
+                                            outputfile=outputdir / 'pctwear_excltgv_denom_max.png',
+                                            userpctwear_kwargs=dict(mode='max', maxdays=5*7),
+                                            userpctwear_weekend_kwargs=dict(mode='max', maxdays=2*7),
+                                            add_min_days_to_lbl=False
+                                        )
+    else:
+       print(f'WARNING: Activity file {args.activity} does not have the class_5min_binary activity time series. Proceeding to sleep data analysis.')   
 
 
     # Bedtime start and end times
@@ -1580,44 +1583,46 @@ def main(args=None):
     sleeptime.plot_sleeptime(sleeptime.data.query('weeknum != 5'), outputfile=outputdir / 'sleep_clockmap_n=582.png')
 
     # School vs Thanksgiving activity
+    if 'class_5min' in activity_data.columns:
+        activity_agg_data = ActivityAggData(activity_data,
+                                            sleep_data,
+                                            query_str='weeknum != 5',
+                                            min_count_per_user_dayofweek=3,
+                                        )
+        activity_agg_data_tgv = ActivityAggData(activity_data,
+                                            sleep_data,
+                                            query_str='weeknum == 5',
+                                            min_count_per_user_dayofweek=1,
+                                        )
 
-    activity_agg_data = ActivityAggData(activity_data,
-                                        sleep_data,
-                                        query_str='weeknum != 5',
-                                        min_count_per_user_dayofweek=3,
-                                    )
-    activity_agg_data_tgv = ActivityAggData(activity_data,
-                                        sleep_data,
-                                        query_str='weeknum == 5',
-                                        min_count_per_user_dayofweek=1,
-                                    )
+        assert activity_agg_data.user_idxs['record_id'].nunique() == 566
 
-    assert activity_agg_data.user_idxs['record_id'].nunique() == 566
+        plot_activity_school_vs_tgv(activity_agg_data, activity_agg_data_tgv,
+                                    outputfile=outputdir / 'activity_bedtime_by_dayofweek_school_vs_tgv.png'
+                                )
 
-    plot_activity_school_vs_tgv(activity_agg_data, activity_agg_data_tgv,
-                                outputfile=outputdir / 'activity_bedtime_by_dayofweek_school_vs_tgv.png'
-                            )
-
-    # Compare activity using SPM
-    activity_agg_data_subset = generate_activityaggdata_subset(activity_data,
-                                                            sleep_data,
-                                                            demog_subset_query_dict=None,
-                                                            aggdata_kwargs=dict(
-                                                                    query_str='weeknum != 5',
-                                                                    min_count_per_user_dayofweek=3,
+        # Compare activity using SPM
+        activity_agg_data_subset = generate_activityaggdata_subset(activity_data,
+                                                                sleep_data,
+                                                                demog_subset_query_dict=None,
+                                                                aggdata_kwargs=dict(
+                                                                        query_str='weeknum != 5',
+                                                                        min_count_per_user_dayofweek=3,
+                                                                    )
                                                                 )
-                                                            )
-    sd = SubsetDifferences(activity_agg_data_subset, ['m','f', 'nb'],
-                    dayofweek_list=range(7),
-                    fresh_plot=False,
-                    stat_test='anova',
-                    plot=False
-                    )
+        sd = SubsetDifferences(activity_agg_data_subset, ['m','f', 'nb'],
+                        dayofweek_list=range(7),
+                        fresh_plot=False,
+                        stat_test='anova',
+                        plot=False
+                        )
 
-    combine_subset_difference_plots(activity_agg_data_subset, ['m', 'f'],
-                                outputfile=outputdir / 'compare_activityts_daily_m_vs_f.png',
-                                    plot_what='spm',
-                                a=3, b=-5)
+        combine_subset_difference_plots(activity_agg_data_subset, ['m', 'f'],
+                                    outputfile=outputdir / 'compare_activityts_daily_m_vs_f.png',
+                                        plot_what='spm',
+                                    a=3, b=-5)
+    else:
+        print(f'WARNING: Activity file {args.activity} does not have the class_5min activity time series. Proceeding to sleep data analysis.')
 
 
 
