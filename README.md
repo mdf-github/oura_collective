@@ -11,7 +11,10 @@ Then activate:
 `conda activate oura_collective`.
 
 ## Downloading the data
-The data is available at https://doi.org/10.6084/m9.figshare.29625014. Download the `data/` folder and place the contents in the directory containing `oura_collective.py`.
+The data is available by reasonable request to the corresponding authors.
+However, we are including a sample dataset in the data repository so that users can run the script and understand how the results were generated.
+
+Below is the file tree structure assumed by the code:
 
     oura_collective
     |--data
@@ -21,4 +24,4 @@ The data is available at https://doi.org/10.6084/m9.figshare.29625014. Download 
     |--utils.py
 
 ## Running the code
-Run `python oura_collective.py` creates a folder `figures/oura_collective_behavior_public` that will contain all the figures. It will also output the regression tables.
+Run `python oura_collective.py --activity activity_data.csv --sleep sleep_data.csv` creates a folder `figures/oura_collective_behavior_public` that will contain all the figures. It will also output the regression tables.
